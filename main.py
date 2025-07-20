@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://www.figma.com/"],  # Figma Make origin
+    allow_origins=["*"],  # You can specify exact origins later for security
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,16 +23,15 @@ app.add_middleware(
 async def root():
     return {"message": "Text Extractor API is running."}
 
+# Replace or add this POST endpoint to receive the file correctly from Figma Make
 @app.post("/extract-text")
 async def extract_text(file: UploadFile = File(...)):
-    # Save uploaded file temporarily
     try:
         suffix = os.path.splitext(file.filename)[-1].lower()
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
             shutil.copyfileobj(file.file, tmp)
             tmp_path = tmp.name
 
-        # Determine file type
         if suffix == ".pdf":
             text = extract_text_from_pdf(tmp_path)
             file_type = "pdf"
