@@ -11,8 +11,6 @@ app = FastAPI()
 
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://ceabd713-f5fb-4fc9-8801-90170d9dea0a-figmaiframepreview.figma.site"],  # Figma Make origin
