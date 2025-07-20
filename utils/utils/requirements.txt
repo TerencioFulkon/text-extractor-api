@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+requests
+pdfplumber
+pytesseract
+pdf2image
+python-docx
+pandas
+Pillow
