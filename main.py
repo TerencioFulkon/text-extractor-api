@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File
 import shutil
 import os
 import tempfile
+from supabase import create_client
 
 from utils.extract_pdf import extract_text_from_pdf
 from utils.extract_docx import extract_text_from_docx
@@ -13,19 +14,24 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # You can specify exact origins later for security
+    allow_origins=["*"],  # Update to your frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Initialize Supabase client from environment variables
+SUPABASE_URL = os.getenv("https://poycttqumubvvlywokaq.supabase.co")
+SUPABASE_ANON_KEY = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBveWN0dHF1bXVidnZseXdva2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2OTIxNjYsImV4cCI6MjA2ODI2ODE2Nn0.MxoQEuLItLq40u-oehYRvtY2gLrGZCo1xCISul57Dlk")
+supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+
 @app.get("/")
 async def root():
     return {"message": "Text Extractor API is running."}
 
-# Replace or add this POST endpoint to receive the file correctly from Figma Make
 @app.post("/extract-text")
 async def extract_text(file: UploadFile = File(...)):
+    tmp_path = None
     try:
         suffix = os.path.splitext(file.filename)[-1].lower()
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
@@ -45,6 +51,26 @@ async def extract_text(file: UploadFile = File(...)):
             text = "[Unsupported file type]"
             file_type = suffix
 
+        # TODO: Replace with real user id from auth/session
+        user_id = "anonymous"
+
+        # Insert into Supabase
+        data = {
+            "user_id": user_id,
+            "file_name": file.filename,
+            "file_type": file_type,
+            "extracted_text": text,
+            "structured_output": None,
+        }
+
+        insert_response = supabase.table("extracted_text").insert(data).execute()
+
+        if insert_response.error:
+            return {
+                "status": "error",
+                "error": f"Database insert failed: {insert_response.error.message}"
+            }
+
         return {
             "status": "success",
             "file_type": file_type,
@@ -58,5 +84,5 @@ async def extract_text(file: UploadFile = File(...)):
         }
 
     finally:
-        if os.path.exists(tmp_path):
+        if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
