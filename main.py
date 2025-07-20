@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://ceabd713-f5fb-4fc9-8801-90170d9dea0a-figmaiframepreview.figma.site"],  # Figma Make origin
+    allow_origins=["https://www.figma.com/"],  # Figma Make origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
