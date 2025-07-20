@@ -3,10 +3,34 @@ import shutil
 import os
 import tempfile
 from supabase import create_client
-
 from utils.extract_pdf import extract_text_from_pdf
 from utils.extract_docx import extract_text_from_docx
 from utils.extract_csv import extract_text_from_csv
+from fastapi import Depends, Header, HTTPException
+from jose import jwt
+from jose.exceptions import JWTError
+from starlette.status import HTTP_401_UNAUTHORIZED
+
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")  # Your Supabase JWT secret (see below)
+
+def get_current_user(authorization: str = Header(...)) -> str:
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Invalid authorization header format.",
+        )
+    
+    token = authorization.replace("Bearer ", "")
+
+    try:
+        payload = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"])
+        return payload["sub"]  # Supabase user ID
+    except JWTError:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token.",
+        )
+
 
 app = FastAPI()
 
@@ -30,7 +54,7 @@ async def root():
     return {"message": "Text Extractor API is running."}
 
 @app.post("/extract-text")
-async def extract_text(file: UploadFile = File(...)):
+async def extract_text(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
     tmp_path = None
     try:
         suffix = os.path.splitext(file.filename)[-1].lower()
@@ -50,9 +74,6 @@ async def extract_text(file: UploadFile = File(...)):
         else:
             text = "[Unsupported file type]"
             file_type = suffix
-
-        # TODO: Replace with real user id from auth/session
-        user_id = "anonymous"
 
         # Insert into Supabase
         data = {
