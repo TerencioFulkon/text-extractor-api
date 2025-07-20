@@ -9,3 +9,4 @@ pandas
 Pillow
 python-multipart
 supabase
+python-jose
