@@ -9,6 +9,18 @@ from utils.extract_csv import extract_text_from_csv
 
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://ceabd713-f5fb-4fc9-8801-90170d9dea0a-figmaiframepreview.figma.site"],  # Figma Make origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.post("/extract-text")
 async def extract_text(file: UploadFile = File(...)):
     # Save uploaded file temporarily
