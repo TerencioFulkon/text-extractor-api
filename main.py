@@ -21,6 +21,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    return {"message": "Text Extractor API is running."}
+
 @app.post("/extract-text")
 async def extract_text(file: UploadFile = File(...)):
     # Save uploaded file temporarily
