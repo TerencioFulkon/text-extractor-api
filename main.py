@@ -11,15 +11,9 @@ from jose.exceptions import JWTError
 from starlette.status import HTTP_401_UNAUTHORIZED
 import base64
 
-# Decode base64 JWT secret from env variable once at startup
-encoded_jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
-if not encoded_jwt_secret:
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
+if not SUPABASE_JWT_SECRET:
     raise RuntimeError("SUPABASE_JWT_SECRET environment variable is not set")
-
-try:
-    SUPABASE_JWT_SECRET = base64.b64decode(encoded_jwt_secret)
-except Exception as e:
-    raise RuntimeError(f"Failed to decode SUPABASE_JWT_SECRET: {e}")
 
 def get_current_user(authorization: str = Header(...)) -> str:
     if not authorization.startswith("Bearer "):
